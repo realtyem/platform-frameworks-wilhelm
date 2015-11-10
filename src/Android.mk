@@ -217,6 +217,7 @@ LOCAL_C_INCLUDES:=                                                  \
         frameworks/native/include/media/openmax
 LOCAL_MODULE := libOpenSLES
 LOCAL_MODULE_TAGS := optional
+LOCAL_EXPORT_C_INCLUDE_DIRS := $(call include-path-for, wilhelm)
 LOCAL_CFLAGS += -x c++ -std=gnu++11 -DLI_API= -fvisibility=hidden -UNDEBUG \
                 -DSL_API='__attribute__((visibility("default")))'
 LOCAL_SHARED_LIBRARIES := libwilhelm liblog
