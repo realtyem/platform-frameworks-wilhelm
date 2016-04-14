@@ -189,6 +189,8 @@ LOCAL_SHARED_LIBRARIES :=         \
         libeffects                \
         libandroid_runtime
 
+LOCAL_EXPORT_SHARED_LIBRARY_HEADERS := libmedia
+
 # For Brillo, we do not want this dependency as it significantly increases the
 # size of the checkout. Also, the library is dependent on Java (which is not
 # present in Brillo), so it doesn't really make sense to have it anyways. See
