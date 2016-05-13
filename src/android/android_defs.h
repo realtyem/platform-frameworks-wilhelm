@@ -121,7 +121,7 @@ typedef size_t (*data_push_cbf_t)(const uint8_t *data, size_t size, CAudioPlayer
 /**
  * Time value when time is unknown. Used for instance for duration or playback position
  */
-#define ANDROID_UNKNOWN_TIME -1
+#define ANDROID_UNKNOWN_TIME (-1)
 
 /**
  * Event mask for MPEG-2 TS events associated with TS data
