@@ -76,7 +76,7 @@ SLresult IAndroidAcousticEchoCancellation_IsAvailable(SLAndroidAcousticEchoCance
 {
     SL_ENTER_INTERFACE
 
-    *pEnabled = false;
+    *pEnabled = SL_BOOLEAN_FALSE;
 
     uint32_t numEffects = 0;
     int ret = EffectQueryNumberEffects(&numEffects);
