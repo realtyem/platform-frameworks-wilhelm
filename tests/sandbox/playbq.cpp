@@ -64,7 +64,7 @@ static void swab(const void *from, void *to, ssize_t n)
     }
 }
 
-static audio_utils_fifo fifo;
+static audio_utils_fifo *fifo;
 static unsigned underruns = 0;
 
 static SLuint32 squeeze(void *buffer, SLuint32 nbytes)
@@ -92,7 +92,7 @@ static void callback(SLBufferQueueItf bufq, void *param)
     assert(NULL == param);
     if (!eof) {
         void *buffer = (char *)buffers + framesPerBuffer * sfframesize * which;
-        ssize_t count = audio_utils_fifo_read(&fifo, buffer, framesPerBuffer);
+        ssize_t count = fifo->read(buffer, framesPerBuffer);
         // on underrun from pipe, substitute silence
         if (0 >= count) {
             memset(buffer, 0, framesPerBuffer * sfframesize);
@@ -141,7 +141,7 @@ static void *file_reader_loop(void *arg __unused)
         }
         const unsigned char *ptr = (unsigned char *) temp;
         while (count > 0) {
-            ssize_t actual = audio_utils_fifo_write(&fifo, ptr, (size_t) count);
+            ssize_t actual = fifo->write(ptr, (size_t) count);
             if (actual < 0) {
                 break;
             }
@@ -536,7 +536,7 @@ int main(int argc, char **argv)
 
 #define FIFO_FRAMES 16384
     void *fifoBuffer = malloc(FIFO_FRAMES * sfframesize);
-    audio_utils_fifo_init(&fifo, FIFO_FRAMES, sfframesize, fifoBuffer);
+    fifo = new audio_utils_fifo(FIFO_FRAMES, sfframesize, fifoBuffer);
 
     // create thread to read from file
     pthread_t thread;
@@ -610,8 +610,10 @@ int main(int argc, char **argv)
     // destroy audio player
     (*playerObject)->Destroy(playerObject);
 
-    audio_utils_fifo_deinit(&fifo);
+    delete fifo;
+    fifo = NULL;
     free(fifoBuffer);
+    fifoBuffer = NULL;
 
     }
 
