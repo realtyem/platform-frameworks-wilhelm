@@ -186,7 +186,6 @@ LOCAL_SHARED_LIBRARIES :=         \
         libcutils                 \
         libgui                    \
         libdl                     \
-        libeffects                \
         libandroid_runtime
 
 # For Brillo, we do not want this dependency as it significantly increases the
