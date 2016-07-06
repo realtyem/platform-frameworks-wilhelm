@@ -161,7 +161,7 @@ SLresult audioRecorder_getPerformanceMode(CAudioRecorder* ar, SLuint32 *pMode) {
         *pMode = SL_ANDROID_PERFORMANCE_NONE;
         break;
     case ANDROID_PERFORMANCE_MODE_POWER_SAVING:
-        *pMode = ANDROID_PERFORMANCE_MODE_POWER_SAVING;
+        *pMode = SL_ANDROID_PERFORMANCE_POWER_SAVING;
         break;
     default:
         result = SL_RESULT_INTERNAL_ERROR;
@@ -504,7 +504,6 @@ SLresult android_audioRecorder_getConfig(CAudioRecorder* ar, const SLchar *confi
     return result;
 }
 
-
 // Called from android_audioRecorder_realize for a PCM buffer queue recorder before creating the
 // AudioRecord to determine which performance modes are allowed based on effect interfaces present
 static void checkAndSetPerformanceModePre(CAudioRecorder* ar)
@@ -530,12 +529,40 @@ static void checkAndSetPerformanceModePre(CAudioRecorder* ar)
         MPH_ANDROIDEFFECT,
         // FIXME The problem with a blacklist is remembering to add new interfaces here
     };
+
     for (unsigned i = 0; i < sizeof(blacklist)/sizeof(blacklist[0]); ++i) {
         if (IsInterfaceInitialized(&ar->mObject, blacklist[i])) {
-            //TODO: query effect for EFFECT_FLAG_HW_ACC_xx flag to refine mode
-            allowedModes &=
-                    ~(ANDROID_PERFORMANCE_MODE_LATENCY|ANDROID_PERFORMANCE_MODE_LATENCY_EFFECTS);
-            break;
+            uint32_t flags = 0;
+
+            allowedModes &= ~ANDROID_PERFORMANCE_MODE_LATENCY;
+
+            // if generic effect interface is used we don't know which effect will be used and
+            // disable all low latency performance modes
+            if (blacklist[i] != MPH_ANDROIDEFFECT) {
+                switch (blacklist[i]) {
+                case MPH_ANDROIDACOUSTICECHOCANCELLATION:
+                    SL_LOGV("checkAndSetPerformanceModePre found AEC name %s",
+                            ar->mAcousticEchoCancellation.mAECDescriptor.name);
+                    flags = ar->mAcousticEchoCancellation.mAECDescriptor.flags;
+                    break;
+                case MPH_ANDROIDAUTOMATICGAINCONTROL:
+                    SL_LOGV("checkAndSetPerformanceModePre found AGC name %s",
+                            ar->mAutomaticGainControl.mAGCDescriptor.name);
+                    flags = ar->mAutomaticGainControl.mAGCDescriptor.flags;
+                    break;
+                case MPH_ANDROIDNOISESUPPRESSION:
+                    SL_LOGV("checkAndSetPerformanceModePre found NS name %s",
+                            ar->mNoiseSuppression.mNSDescriptor.name);
+                    flags = ar->mNoiseSuppression.mNSDescriptor.flags;
+                    break;
+                default:
+                    break;
+                }
+            }
+            if ((flags & EFFECT_FLAG_HW_ACC_TUNNEL) == 0) {
+                allowedModes &= ~ANDROID_PERFORMANCE_MODE_LATENCY_EFFECTS;
+                break;
+            }
         }
     }
 #if LOG_NDEBUG == 0
@@ -681,6 +708,7 @@ SLresult android_audioRecorder_realize(CAudioRecorder* ar, SLboolean async) {
         // FIXME should return a more specific result depending on status
         result = SL_RESULT_CONTENT_UNSUPPORTED;
         ar->mAudioRecord.clear();
+        return result;
     }
 
     // update performance mode according to actual flags granted to AudioRecord
@@ -702,8 +730,46 @@ SLresult android_audioRecorder_realize(CAudioRecorder* ar, SLboolean async) {
         if (j_env->ExceptionCheck()) {
             SL_LOGE("Java exception releasing recorder routing object.");
             result = SL_RESULT_INTERNAL_ERROR;
+            ar->mAudioRecord.clear();
+            return result;
         }
    }
+
+    if (ar->mPerformanceMode != ANDROID_PERFORMANCE_MODE_LATENCY) {
+        audio_session_t sessionId = ar->mAudioRecord->getSessionId();
+        // initialize AEC
+        effect_descriptor_t *descriptor = &ar->mAcousticEchoCancellation.mAECDescriptor;
+        if (memcmp(SL_IID_ANDROIDACOUSTICECHOCANCELLATION, &descriptor->type,
+                   sizeof(effect_uuid_t)) == 0) {
+            if ((ar->mPerformanceMode != ANDROID_PERFORMANCE_MODE_LATENCY_EFFECTS) ||
+                    (descriptor->flags & EFFECT_FLAG_HW_ACC_TUNNEL)) {
+                SL_LOGV("Need to initialize AEC for AudioRecorder=%p", ar);
+                android_aec_init(sessionId, &ar->mAcousticEchoCancellation);
+            }
+        }
+
+        // initialize AGC
+        descriptor = &ar->mAutomaticGainControl.mAGCDescriptor;
+        if (memcmp(SL_IID_ANDROIDAUTOMATICGAINCONTROL, &descriptor->type,
+                   sizeof(effect_uuid_t)) == 0) {
+            if ((ar->mPerformanceMode != ANDROID_PERFORMANCE_MODE_LATENCY_EFFECTS) ||
+                    (descriptor->flags & EFFECT_FLAG_HW_ACC_TUNNEL)) {
+                SL_LOGV("Need to initialize AGC for AudioRecorder=%p", ar);
+                android_agc_init(sessionId, &ar->mAutomaticGainControl);
+            }
+        }
+
+        // initialize NS
+        descriptor = &ar->mNoiseSuppression.mNSDescriptor;
+        if (memcmp(SL_IID_ANDROIDNOISESUPPRESSION, &descriptor->type,
+                   sizeof(effect_uuid_t)) == 0) {
+            if ((ar->mPerformanceMode != ANDROID_PERFORMANCE_MODE_LATENCY_EFFECTS) ||
+                    (descriptor->flags & EFFECT_FLAG_HW_ACC_TUNNEL)) {
+                SL_LOGV("Need to initialize NS for AudioRecorder=%p", ar);
+                android_ns_init(sessionId, &ar->mNoiseSuppression);
+            }
+        }
+    }
 
     return result;
 }

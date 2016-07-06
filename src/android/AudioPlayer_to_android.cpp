@@ -1688,6 +1688,8 @@ SLresult android_audioPlayer_realize(CAudioPlayer *pAudioPlayer, SLboolean async
             if (j_env->ExceptionCheck()) {
                 SL_LOGE("Java exception releasing recorder routing object.");
                 result = SL_RESULT_INTERNAL_ERROR;
+                pAudioPlayer->mAudioTrack.clear();
+                return result;
             }
         }
     }
@@ -1817,25 +1819,34 @@ SLresult android_audioPlayer_realize(CAudioPlayer *pAudioPlayer, SLboolean async
         break;
     }
 
-    // proceed with effect initialization
-    // initialize EQ
-    // FIXME use a table of effect descriptors when adding support for more effects
-    if (memcmp(SL_IID_EQUALIZER, &pAudioPlayer->mEqualizer.mEqDescriptor.type,
-            sizeof(effect_uuid_t)) == 0) {
-        SL_LOGV("Need to initialize EQ for AudioPlayer=%p", pAudioPlayer);
-        android_eq_init(pAudioPlayer->mSessionId, &pAudioPlayer->mEqualizer);
-    }
-    // initialize BassBoost
-    if (memcmp(SL_IID_BASSBOOST, &pAudioPlayer->mBassBoost.mBassBoostDescriptor.type,
-            sizeof(effect_uuid_t)) == 0) {
-        SL_LOGV("Need to initialize BassBoost for AudioPlayer=%p", pAudioPlayer);
-        android_bb_init(pAudioPlayer->mSessionId, &pAudioPlayer->mBassBoost);
-    }
-    // initialize Virtualizer
-    if (memcmp(SL_IID_VIRTUALIZER, &pAudioPlayer->mVirtualizer.mVirtualizerDescriptor.type,
-               sizeof(effect_uuid_t)) == 0) {
-        SL_LOGV("Need to initialize Virtualizer for AudioPlayer=%p", pAudioPlayer);
-        android_virt_init(pAudioPlayer->mSessionId, &pAudioPlayer->mVirtualizer);
+    if (result == SL_RESULT_SUCCESS) {
+        // proceed with effect initialization
+        // initialize EQ
+        // FIXME use a table of effect descriptors when adding support for more effects
+
+        // No session effects allowed even in latency with effects performance mode because HW
+        // accelerated effects are only tolerated as post processing in this mode
+        if ((pAudioPlayer->mAndroidObjType != AUDIOPLAYER_FROM_PCM_BUFFERQUEUE) ||
+                ((pAudioPlayer->mPerformanceMode != ANDROID_PERFORMANCE_MODE_LATENCY) &&
+                 (pAudioPlayer->mPerformanceMode != ANDROID_PERFORMANCE_MODE_LATENCY_EFFECTS))) {
+            if (memcmp(SL_IID_EQUALIZER, &pAudioPlayer->mEqualizer.mEqDescriptor.type,
+                    sizeof(effect_uuid_t)) == 0) {
+                SL_LOGV("Need to initialize EQ for AudioPlayer=%p", pAudioPlayer);
+                android_eq_init(pAudioPlayer->mSessionId, &pAudioPlayer->mEqualizer);
+            }
+            // initialize BassBoost
+            if (memcmp(SL_IID_BASSBOOST, &pAudioPlayer->mBassBoost.mBassBoostDescriptor.type,
+                    sizeof(effect_uuid_t)) == 0) {
+                SL_LOGV("Need to initialize BassBoost for AudioPlayer=%p", pAudioPlayer);
+                android_bb_init(pAudioPlayer->mSessionId, &pAudioPlayer->mBassBoost);
+            }
+            // initialize Virtualizer
+            if (memcmp(SL_IID_VIRTUALIZER, &pAudioPlayer->mVirtualizer.mVirtualizerDescriptor.type,
+                       sizeof(effect_uuid_t)) == 0) {
+                SL_LOGV("Need to initialize Virtualizer for AudioPlayer=%p", pAudioPlayer);
+                android_virt_init(pAudioPlayer->mSessionId, &pAudioPlayer->mVirtualizer);
+            }
+        }
     }
 
     // initialize EffectSend
