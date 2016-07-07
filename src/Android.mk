@@ -186,7 +186,6 @@ LOCAL_SHARED_LIBRARIES :=         \
         libcutils                 \
         libgui                    \
         libdl                     \
-        libeffects                \
         libandroid_runtime
 
 LOCAL_EXPORT_SHARED_LIBRARY_HEADERS := libmedia
