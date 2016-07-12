@@ -4,6 +4,7 @@ install : IID_to_MPH.c
 	cp IID_to_MPH.c ../../src/autogen
 
 CFLAGS = -I../../include -g -DNDEBUG
+CFLAGS += -Wall -Werror
 
 %.o : %.c
 	gcc -c -o $@ $(CFLAGS) $<
