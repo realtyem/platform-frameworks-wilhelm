@@ -196,7 +196,7 @@ uint32_t erev_valueSize(int32_t param) {
 }
 
 //-----------------------------------------------------------------------------
-android::status_t android_eq_getParam(android::sp<android::AudioEffect> pFx,
+android::status_t android_eq_getParam(const android::sp<android::AudioEffect>& pFx,
         int32_t param, int32_t param2, void *pValue)
 {
      android::status_t status;
@@ -222,7 +222,7 @@ android::status_t android_eq_getParam(android::sp<android::AudioEffect> pFx,
 
 
 //-----------------------------------------------------------------------------
-android::status_t android_eq_setParam(android::sp<android::AudioEffect> pFx,
+android::status_t android_eq_setParam(const android::sp<android::AudioEffect>& pFx,
         int32_t param, int32_t param2, void *pValue)
 {
     android::status_t status;
@@ -245,7 +245,7 @@ android::status_t android_eq_setParam(android::sp<android::AudioEffect> pFx,
 }
 
 //-----------------------------------------------------------------------------
-android::status_t android_bb_setParam(android::sp<android::AudioEffect> pFx,
+android::status_t android_bb_setParam(const android::sp<android::AudioEffect>& pFx,
         int32_t param, void *pValue) {
 
     return android_fx_setParam(pFx, param, BASSBOOST_PARAM_SIZE_MAX,
@@ -253,7 +253,7 @@ android::status_t android_bb_setParam(android::sp<android::AudioEffect> pFx,
 }
 
 //-----------------------------------------------------------------------------
-android::status_t android_bb_getParam(android::sp<android::AudioEffect> pFx,
+android::status_t android_bb_getParam(const android::sp<android::AudioEffect>& pFx,
         int32_t param, void *pValue) {
 
     return android_fx_getParam(pFx, param, BASSBOOST_PARAM_SIZE_MAX,
@@ -348,7 +348,7 @@ void android_virt_init(int sessionId, IVirtualizer* ivi) {
 }
 
 //-----------------------------------------------------------------------------
-android::status_t android_virt_setParam(android::sp<android::AudioEffect> pFx,
+android::status_t android_virt_setParam(const android::sp<android::AudioEffect>& pFx,
         int32_t param, void *pValue) {
 
     return android_fx_setParam(pFx, param, VIRTUALIZER_PARAM_SIZE_MAX,
@@ -356,7 +356,7 @@ android::status_t android_virt_setParam(android::sp<android::AudioEffect> pFx,
 }
 
 //-----------------------------------------------------------------------------
-android::status_t android_virt_getParam(android::sp<android::AudioEffect> pFx,
+android::status_t android_virt_getParam(const android::sp<android::AudioEffect>& pFx,
         int32_t param, void *pValue) {
 
     return android_fx_getParam(pFx, param, VIRTUALIZER_PARAM_SIZE_MAX,
@@ -384,7 +384,7 @@ void android_prev_init(IPresetReverb* ipr) {
 }
 
 //-----------------------------------------------------------------------------
-android::status_t android_prev_setPreset(android::sp<android::AudioEffect> pFx, uint16_t preset) {
+android::status_t android_prev_setPreset(const android::sp<android::AudioEffect>& pFx, uint16_t preset) {
     android::status_t status = android_fx_setParam(pFx, REVERB_PARAM_PRESET,
             PRESETREVERB_PARAM_SIZE_MAX, &preset, sizeof(uint16_t));
     // enable the effect if the preset is different from SL_REVERBPRESET_NONE
@@ -393,7 +393,7 @@ android::status_t android_prev_setPreset(android::sp<android::AudioEffect> pFx, 
 }
 
 //-----------------------------------------------------------------------------
-android::status_t android_prev_getPreset(android::sp<android::AudioEffect> pFx, uint16_t* preset) {
+android::status_t android_prev_getPreset(const android::sp<android::AudioEffect>& pFx, uint16_t* preset) {
     return android_fx_getParam(pFx, REVERB_PARAM_PRESET, PRESETREVERB_PARAM_SIZE_MAX, preset,
             sizeof(uint16_t));
 }
@@ -422,7 +422,7 @@ void android_erev_init(IEnvironmentalReverb* ier) {
 }
 
 //-----------------------------------------------------------------------------
-android::status_t android_erev_setParam(android::sp<android::AudioEffect> pFx,
+android::status_t android_erev_setParam(const android::sp<android::AudioEffect>& pFx,
         int32_t param, void *pValue) {
 
     // given the size difference between a single reverb property and the whole set of reverb
@@ -437,7 +437,7 @@ android::status_t android_erev_setParam(android::sp<android::AudioEffect> pFx,
 }
 
 //-----------------------------------------------------------------------------
-android::status_t android_erev_getParam(android::sp<android::AudioEffect> pFx,
+android::status_t android_erev_getParam(const android::sp<android::AudioEffect>& pFx,
         int32_t param, void *pValue) {
 
     // given the size difference between a single reverb property and the whole set of reverb
@@ -464,7 +464,7 @@ android::status_t android_erev_getParam(android::sp<android::AudioEffect> pFx,
  *      ap->mAudioTrack != 0 is optional; if no track yet then the setting is deferred
  */
 android::status_t android_fxSend_attach(CAudioPlayer* ap, bool attach,
-        android::sp<android::AudioEffect> pFx, SLmillibel sendLevel) {
+        const android::sp<android::AudioEffect>& pFx, SLmillibel sendLevel) {
 
     if (pFx == 0) {
         return android::INVALID_OPERATION;
@@ -570,7 +570,7 @@ android::status_t android_fxSend_setSendLevel(CAudioPlayer* ap, SLmillibel sendL
 }
 
 //-----------------------------------------------------------------------------
-android::status_t android_fx_setParam(android::sp<android::AudioEffect> pFx,
+android::status_t android_fx_setParam(const android::sp<android::AudioEffect>& pFx,
         int32_t param, uint32_t paramSizeMax, void *pValue, uint32_t valueSize)
 {
 
@@ -591,7 +591,7 @@ android::status_t android_fx_setParam(android::sp<android::AudioEffect> pFx,
 
 
 //-----------------------------------------------------------------------------
-android::status_t android_fx_getParam(android::sp<android::AudioEffect> pFx,
+android::status_t android_fx_getParam(const android::sp<android::AudioEffect>& pFx,
         int32_t param, uint32_t paramSizeMax, void *pValue, uint32_t valueSize)
 {
     android::status_t status;
@@ -888,13 +888,13 @@ uint32_t aec_valueSize(int32_t param) {
     return size;
 }
 
-android::status_t android_aec_setParam(android::sp<android::AudioEffect> pFx,
+android::status_t android_aec_setParam(const android::sp<android::AudioEffect>& pFx,
         int32_t param, void *pValue) {
     return android_fx_setParam(pFx, param, AEC_PARAM_SIZE_MAX,
             pValue, aec_valueSize(param));
 }
 
-android::status_t android_aec_getParam(android::sp<android::AudioEffect> pFx,
+android::status_t android_aec_getParam(const android::sp<android::AudioEffect>& pFx,
         int32_t param, void *pValue) {
     return android_fx_getParam(pFx, param, AEC_PARAM_SIZE_MAX,
             pValue, aec_valueSize(param));
@@ -924,13 +924,13 @@ uint32_t agc_valueSize(int32_t param) {
     return size;
 }
 
-android::status_t android_agc_setParam(android::sp<android::AudioEffect> pFx,
+android::status_t android_agc_setParam(const android::sp<android::AudioEffect>& pFx,
         int32_t param, void *pValue) {
     return android_fx_setParam(pFx, param, AGC_PARAM_SIZE_MAX,
             pValue, agc_valueSize(param));
 }
 
-android::status_t android_agc_getParam(android::sp<android::AudioEffect> pFx,
+android::status_t android_agc_getParam(const android::sp<android::AudioEffect>& pFx,
         int32_t param, void *pValue) {
     return android_fx_getParam(pFx, param, AGC_PARAM_SIZE_MAX,
             pValue, agc_valueSize(param));
@@ -956,14 +956,14 @@ uint32_t ns_valueSize(int32_t param) {
     return size;
 }
 
-android::status_t android_ns_setParam(android::sp<android::AudioEffect> pFx,
+android::status_t android_ns_setParam(const android::sp<android::AudioEffect>& pFx,
         int32_t param, void *pValue)
 {
     return android_fx_setParam(pFx, param, NS_PARAM_SIZE_MAX,
             pValue, ns_valueSize(param));
 }
 
-android::status_t android_ns_getParam(android::sp<android::AudioEffect> pFx,
+android::status_t android_ns_getParam(const android::sp<android::AudioEffect>& pFx,
         int32_t param, void *pValue)
 {
     return android_fx_getParam(pFx, param, NS_PARAM_SIZE_MAX,
