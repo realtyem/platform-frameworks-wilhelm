@@ -24,3 +24,16 @@ ndk_library {
     symbol_file: "libOpenMAXAL.map.txt",
     first_version: "14",
 }
+
+ndk_headers {
+    name: "libOpenSLES_headers",
+    from: "include",
+    to: "",
+    srcs: ["include/SLES/**/*.h"], // All headers in all subdirs.
+}
+
+ndk_library {
+    name: "libOpenSLES.ndk",
+    symbol_file: "libOpenSLES.map.txt",
+    first_version: "9",
+}
