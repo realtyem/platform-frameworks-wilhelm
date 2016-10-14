@@ -20,15 +20,15 @@
 #include "utils/RefBase.h"
 #include "utils/String16.h"
 
-#include <audio_effects/effect_bassboost.h>
-#include <audio_effects/effect_equalizer.h>
-#include <audio_effects/effect_environmentalreverb.h>
-#include <audio_effects/effect_presetreverb.h>
-#include <audio_effects/effect_virtualizer.h>
+#include <system/audio_effects/effect_bassboost.h>
+#include <system/audio_effects/effect_equalizer.h>
+#include <system/audio_effects/effect_environmentalreverb.h>
+#include <system/audio_effects/effect_presetreverb.h>
+#include <system/audio_effects/effect_virtualizer.h>
 
-#include <audio_effects/effect_aec.h>
-#include <audio_effects/effect_agc.h>
-#include <audio_effects/effect_ns.h>
+#include <system/audio_effects/effect_aec.h>
+#include <system/audio_effects/effect_agc.h>
+#include <system/audio_effects/effect_ns.h>
 
 #include <system/audio.h>
 

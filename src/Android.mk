@@ -167,8 +167,7 @@ LOCAL_C_INCLUDES:=                                                  \
         frameworks/av/media/libstagefright                        \
         frameworks/av/media/libstagefright/include                \
         frameworks/av/media/libstagefright/http                     \
-        frameworks/native/include/media/openmax                     \
-        $(call include-path-for, audio-effects)
+        frameworks/native/include/media/openmax
 
 LOCAL_CFLAGS += -x c++ -std=gnu++11 -Wno-multichar -Wno-invalid-offsetof
 

@@ -17,7 +17,7 @@
 /* Acoustic Echo Cancellation implementation */
 #include "sles_allinclusive.h"
 
-#include <audio_effects/effect_aec.h>
+#include <system/audio_effects/effect_aec.h>
 
 /**
  * returns true if this interface is not associated with an initialized AEC effect

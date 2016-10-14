@@ -17,7 +17,7 @@
 /* Automatic Gain Control implementation */
 #include "sles_allinclusive.h"
 
-#include <audio_effects/effect_agc.h>
+#include <system/audio_effects/effect_agc.h>
 
 /**
  * returns true if this interface is not associated with an initialized AGC effect
