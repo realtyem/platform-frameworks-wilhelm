@@ -3,12 +3,11 @@ LOCAL_PATH:= $(call my-dir)
 include $(CLEAR_VARS)
 
 LOCAL_SRC_FILES :=     \
-        assert.c          \
+        assert.cpp        \
         ut/OpenSLESUT.c   \
         ut/slesutResult.c
 
-LOCAL_C_INCLUDES:= \
-        $(call include-path-for, wilhelm)
+LOCAL_C_INCLUDES:= $(LOCAL_PATH)/../include
 
 LOCAL_CFLAGS += -fvisibility=hidden -UNDEBUG
 
@@ -18,8 +17,7 @@ include $(BUILD_STATIC_LIBRARY)
 
 include $(CLEAR_VARS)
 
-LOCAL_C_INCLUDES:= \
-        $(call include-path-for, wilhelm)
+LOCAL_C_INCLUDES:= $(LOCAL_PATH)/../include
 
 LOCAL_CFLAGS += -Wno-initializer-overrides
 # -Wno-missing-field-initializers
@@ -28,7 +26,7 @@ LOCAL_CFLAGS += -Wno-initializer-overrides
 LOCAL_CFLAGS += -DUSE_DESIGNATED_INITIALIZERS -UNDEBUG
 
 LOCAL_SRC_FILES:=                     \
-        assert.c \
+        assert.cpp \
         MPH_to.c \
         handlers.c
 
@@ -66,19 +64,19 @@ LOCAL_CFLAGS += -DPLATFORM_SDK_VERSION=$(PLATFORM_SDK_VERSION)
 LOCAL_CFLAGS += -fvisibility=hidden -DLI_API='__attribute__((visibility("default")))'
 
 LOCAL_SRC_FILES:=                     \
-        OpenSLES_IID.c                \
-        assert.c                      \
-        classes.c                     \
-        data.c                        \
-        devices.c                     \
-        entry.c                       \
-        handler_bodies.c              \
-        trace.c                       \
-        locks.c                       \
-        sles.c                        \
-        sl_iid.c                      \
-        sllog.c                       \
-        ThreadPool.c                  \
+        OpenSLES_IID.cpp              \
+        assert.cpp                    \
+        classes.cpp                   \
+        data.cpp                      \
+        devices.cpp                   \
+        entry.cpp                     \
+        handler_bodies.cpp            \
+        trace.cpp                     \
+        locks.cpp                     \
+        sles.cpp                      \
+        sl_iid.cpp                    \
+        sllog.cpp                     \
+        ThreadPool.cpp                \
         android/AudioPlayer_to_android.cpp    \
         android/AudioRecorder_to_android.cpp  \
         android/MediaPlayer_to_android.cpp    \
@@ -95,80 +93,82 @@ LOCAL_SRC_FILES:=                     \
         android/android_StreamPlayer.cpp      \
         android/android_Effect.cpp            \
         android/util/AacAdtsExtractor.cpp     \
-        android/channels.c                    \
-        autogen/IID_to_MPH.c                  \
-        objects/C3DGroup.c                    \
-        objects/CAudioPlayer.c                \
-        objects/CAudioRecorder.c              \
-        objects/CEngine.c                     \
-        objects/COutputMix.c                  \
-        objects/CMediaPlayer.c                \
-        itf/IAndroidBufferQueue.c         \
-        itf/IAndroidConfiguration.c       \
+        android/channels.cpp                  \
+        autogen/IID_to_MPH.cpp                \
+        objects/C3DGroup.cpp                  \
+        objects/CAudioPlayer.cpp              \
+        objects/CAudioRecorder.cpp            \
+        objects/CEngine.cpp                   \
+        objects/COutputMix.cpp                \
+        objects/CMediaPlayer.cpp              \
+        itf/IAndroidBufferQueue.cpp       \
+        itf/IAndroidConfiguration.cpp     \
         itf/IAndroidEffect.cpp            \
-        itf/IAndroidEffectCapabilities.c  \
-        itf/IAndroidEffectSend.c          \
-        itf/IAcousticEchoCancellation.c   \
-        itf/IAutomaticGainControl.c       \
-        itf/IBassBoost.c                  \
-        itf/IBufferQueue.c                \
-        itf/IDynamicInterfaceManagement.c \
-        itf/IEffectSend.c                 \
-        itf/IEngine.c                     \
-        itf/IEngineCapabilities.c         \
-        itf/IEnvironmentalReverb.c        \
-        itf/IEqualizer.c                  \
-        itf/IMetadataExtraction.c         \
-        itf/INoiseSuppression.c           \
-        itf/IMuteSolo.c                   \
-        itf/IObject.c                     \
-        itf/IOutputMix.c                  \
-        itf/IPlay.c                       \
-        itf/IPlaybackRate.c               \
-        itf/IPrefetchStatus.c             \
-        itf/IPresetReverb.c               \
-        itf/IRecord.c                     \
-        itf/ISeek.c                       \
+        itf/IAndroidEffectCapabilities.cpp\
+        itf/IAndroidEffectSend.cpp        \
+        itf/IAcousticEchoCancellation.cpp \
+        itf/IAutomaticGainControl.cpp     \
+        itf/IBassBoost.cpp                \
+        itf/IBufferQueue.cpp              \
+        itf/IDynamicInterfaceManagement.cpp\
+        itf/IEffectSend.cpp               \
+        itf/IEngine.cpp                   \
+        itf/IEngineCapabilities.cpp       \
+        itf/IEnvironmentalReverb.cpp      \
+        itf/IEqualizer.cpp                \
+        itf/IMetadataExtraction.cpp       \
+        itf/INoiseSuppression.cpp         \
+        itf/IMuteSolo.cpp                 \
+        itf/IObject.cpp                   \
+        itf/IOutputMix.cpp                \
+        itf/IPlay.cpp                     \
+        itf/IPlaybackRate.cpp             \
+        itf/IPrefetchStatus.cpp           \
+        itf/IPresetReverb.cpp             \
+        itf/IRecord.cpp                   \
+        itf/ISeek.cpp                     \
         itf/IStreamInformation.cpp        \
         itf/IVideoDecoderCapabilities.cpp \
-        itf/IVirtualizer.c                \
-        itf/IVolume.c
+        itf/IVirtualizer.cpp              \
+        itf/IVolume.cpp
 
 EXCLUDE_SRC :=                            \
-        sync.c                            \
-        itf/I3DCommit.c                   \
-        itf/I3DDoppler.c                  \
-        itf/I3DGrouping.c                 \
-        itf/I3DLocation.c                 \
-        itf/I3DMacroscopic.c              \
-        itf/I3DSource.c                   \
-        itf/IAudioDecoderCapabilities.c   \
-        itf/IAudioEncoder.c               \
-        itf/IAudioEncoderCapabilities.c   \
-        itf/IAudioIODeviceCapabilities.c  \
-        itf/IDeviceVolume.c               \
-        itf/IDynamicSource.c              \
-        itf/ILEDArray.c                   \
-        itf/IMIDIMessage.c                \
-        itf/IMIDIMuteSolo.c               \
-        itf/IMIDITempo.c                  \
-        itf/IMIDITime.c                   \
-        itf/IMetadataTraversal.c          \
-        itf/IPitch.c                      \
-        itf/IRatePitch.c                  \
-        itf/IThreadSync.c                 \
-        itf/IVibra.c                      \
-        itf/IVisualization.c
+        sync.cpp                          \
+        itf/I3DCommit.cpp                 \
+        itf/I3DDoppler.cpp                \
+        itf/I3DGrouping.cpp               \
+        itf/I3DLocation.cpp               \
+        itf/I3DMacroscopic.cpp            \
+        itf/I3DSource.cpp                 \
+        itf/IAudioDecoderCapabilities.cpp \
+        itf/IAudioEncoder.cpp             \
+        itf/IAudioEncoderCapabilities.cpp \
+        itf/IAudioIODeviceCapabilities.cpp\
+        itf/IDeviceVolume.cpp             \
+        itf/IDynamicSource.cpp            \
+        itf/ILEDArray.cpp                 \
+        itf/IMIDIMessage.cpp              \
+        itf/IMIDIMuteSolo.cpp             \
+        itf/IMIDITempo.cpp                \
+        itf/IMIDITime.cpp                 \
+        itf/IMetadataTraversal.cpp        \
+        itf/IPitch.cpp                    \
+        itf/IRatePitch.cpp                \
+        itf/IThreadSync.cpp               \
+        itf/IVibra.cpp                    \
+        itf/IVisualization.cpp
 
 LOCAL_C_INCLUDES:=                                                  \
-        $(call include-path-for, wilhelm)                           \
+        $(LOCAL_PATH)/../include                                    \
         frameworks/av/media/libstagefright                        \
         frameworks/av/media/libstagefright/include                \
         frameworks/av/media/libstagefright/http                     \
         frameworks/native/include/media/openmax                     \
         $(call include-path-for, audio-effects)
 
-LOCAL_CFLAGS += -x c++ -std=gnu++11 -Wno-multichar -Wno-invalid-offsetof
+LOCAL_EXPORT_C_INCLUDE_DIRS := $(LOCAL_PATH)/../include
+
+LOCAL_CFLAGS += -Wno-multichar -Wno-invalid-offsetof
 
 LOCAL_CFLAGS += -Wall -Wextra -Wno-unused-parameter -Werror
 
@@ -201,7 +201,6 @@ LOCAL_SHARED_LIBRARIES += \
 endif
 
 LOCAL_MODULE := libwilhelm
-LOCAL_MODULE_TAGS := optional
 
 ifeq ($(TARGET_BUILD_VARIANT),userdebug)
         LOCAL_CFLAGS += -DUSERDEBUG_BUILD=1
@@ -210,30 +209,27 @@ endif
 include $(BUILD_SHARED_LIBRARY)
 
 include $(CLEAR_VARS)
-LOCAL_SRC_FILES := sl_entry.c sl_iid.c assert.c
+LOCAL_SRC_FILES := sl_entry.cpp sl_iid.cpp assert.cpp
 LOCAL_C_INCLUDES:=                                                  \
-        $(call include-path-for, wilhelm)                           \
         frameworks/av/media/libstagefright                        \
         frameworks/av/media/libstagefright/include                \
         frameworks/native/include/media/openmax
 LOCAL_MODULE := libOpenSLES
-LOCAL_MODULE_TAGS := optional
-LOCAL_EXPORT_C_INCLUDE_DIRS := $(call include-path-for, wilhelm)
-LOCAL_CFLAGS += -x c++ -std=gnu++11 -DLI_API= -fvisibility=hidden -UNDEBUG \
+LOCAL_EXPORT_SHARED_LIBRARY_HEADERS := libwilhelm
+LOCAL_CFLAGS += -DLI_API= -fvisibility=hidden -UNDEBUG \
                 -DSL_API='__attribute__((visibility("default")))'
 LOCAL_SHARED_LIBRARIES := libwilhelm liblog
 include $(BUILD_SHARED_LIBRARY)
 
 include $(CLEAR_VARS)
-LOCAL_SRC_FILES := xa_entry.c xa_iid.c assert.c
+LOCAL_SRC_FILES := xa_entry.cpp xa_iid.cpp assert.cpp
 LOCAL_C_INCLUDES:=                                                  \
-        $(call include-path-for, wilhelm)                           \
         frameworks/av/media/libstagefright                        \
         frameworks/av/media/libstagefright/include                \
         frameworks/native/include/media/openmax
 LOCAL_MODULE := libOpenMAXAL
-LOCAL_MODULE_TAGS := optional
-LOCAL_CFLAGS += -x c++ -std=gnu++11 -DLI_API= -fvisibility=hidden -UNDEBUG \
+LOCAL_EXPORT_SHARED_LIBRARY_HEADERS := libwilhelm
+LOCAL_CFLAGS += -DLI_API= -fvisibility=hidden -UNDEBUG \
                 -DXA_API='__attribute__((visibility("default")))'
 LOCAL_SHARED_LIBRARIES := libwilhelm liblog
 include $(BUILD_SHARED_LIBRARY)
