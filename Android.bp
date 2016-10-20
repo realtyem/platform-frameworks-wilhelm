@@ -17,6 +17,7 @@ ndk_headers {
     from: "include",
     to: "",
     srcs: ["include/OMXAL/**/*.h"], // All headers in all subdirs.
+    license: "include/OMXAL/NOTICE",
 }
 
 ndk_library {
@@ -30,6 +31,7 @@ ndk_headers {
     from: "include",
     to: "",
     srcs: ["include/SLES/**/*.h"], // All headers in all subdirs.
+    license: "include/SLES/NOTICE",
 }
 
 ndk_library {
