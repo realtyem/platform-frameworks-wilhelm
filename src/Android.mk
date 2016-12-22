@@ -182,6 +182,7 @@ LOCAL_SHARED_LIBRARIES :=         \
         libutils                  \
         libmedia                  \
         libaudioclient            \
+        libaudiomanager           \
         libbinder                 \
         libstagefright            \
         libstagefright_foundation \

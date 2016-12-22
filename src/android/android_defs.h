@@ -54,7 +54,9 @@ enum AndroidObjectState {
     // NUM_ANDROID_STATES       // unused
 };
 
-
+/**
+ * Must be one of the supported stream types that can be set through SLAndroidConfigurationItf
+ */
 #define ANDROID_DEFAULT_OUTPUT_STREAM_TYPE AUDIO_STREAM_MUSIC
 
 #define PLAYER_FAILURE ((int32_t) android::UNKNOWN_ERROR)

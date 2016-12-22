@@ -19,6 +19,7 @@
 #include "android/CallbackProtector.h"
 #include "android/android_Effect.h"
 #include "android/android_GenericPlayer.h"
+#include <audiomanager/IAudioManager.h>
 #endif
 
 // Class structures
@@ -97,6 +98,8 @@
     audio_session_t mSessionId;
     /** identifies the Android stream type playback will occur on */
     audio_stream_type_t mStreamType;
+    /** player interface ID, uniquely identifies the player in the system */
+    audio_unique_id_t mPIId;
     // FIXME consolidate the next several variables into one class to avoid placement new
     /** plays the PCM data for this player */
     android::sp<android::AudioTrack> mAudioTrack;
@@ -196,6 +199,7 @@
     // FIXME number of presets will only be saved in IEqualizer, preset names will not be stored
     SLuint32 mEqNumPresets;
     char** mEqPresetNames;
+    android::sp<android::IAudioManager> mAudioManager;
 #endif
 } /*CEngine*/;
 

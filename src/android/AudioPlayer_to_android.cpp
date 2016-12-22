@@ -23,9 +23,14 @@
 #include "android/channels.h"
 
 #include <android_runtime/AndroidRuntime.h>
+#include <binder/IServiceManager.h>
+#include <utils/StrongPointer.h>
+#include <audiomanager/AudioManager.h>
+#include <audiomanager/IAudioManager.h>
 
 #include <fcntl.h>
 #include <sys/stat.h>
+#include <unistd.h>
 
 #include <system/audio.h>
 #include <SLES/OpenSLES_Android.h>
@@ -42,6 +47,44 @@ template class android::KeyedVector<SLuint32,
 #define MEDIAPLAYER_MIN_PLAYBACKRATE_PERMILLE AUDIOTRACK_MIN_PLAYBACKRATE_PERMILLE
 #define MEDIAPLAYER_MAX_PLAYBACKRATE_PERMILLE AUDIOTRACK_MAX_PLAYBACKRATE_PERMILLE
 
+//-----------------------------------------------------------------------------
+// Inline functions to communicate with AudioService through the native AudioManager interface
+inline void audioManagerPlayerEvent(CAudioPlayer* ap, int event) {
+    if (ap->mObject.mEngine->mAudioManager != 0) {
+        ap->mObject.mEngine->mAudioManager->playerEvent(ap->mPIId, event);
+    }
+}
+
+inline void audioManagerReleasePlayer(CAudioPlayer* ap) {
+    if (ap->mObject.mEngine->mAudioManager != 0) {
+        ap->mObject.mEngine->mAudioManager->releasePlayer(ap->mPIId);
+    }
+}
+
+//-----------------------------------------------------------------------------
+// get an audio attributes usage for a stream type, but only consider stream types
+// that can successfully be set through SLAndroidConfigurationItf. It is invalid to call
+// this function with other stream types.
+audio_usage_t usageForStreamType(audio_stream_type_t streamType) {
+    switch (streamType) {
+    case AUDIO_STREAM_MUSIC:
+        return AUDIO_USAGE_MEDIA;
+    case AUDIO_STREAM_VOICE_CALL:
+        return AUDIO_USAGE_VOICE_COMMUNICATION;
+    case AUDIO_STREAM_SYSTEM:
+        return AUDIO_USAGE_ASSISTANCE_SONIFICATION;
+    case AUDIO_STREAM_RING:
+        return AUDIO_USAGE_NOTIFICATION_TELEPHONY_RINGTONE;
+    case AUDIO_STREAM_ALARM:
+        return AUDIO_USAGE_ALARM;
+    case AUDIO_STREAM_NOTIFICATION:
+        return AUDIO_USAGE_NOTIFICATION;
+    default:
+        // shouldn't happen, stream types on AudioPlayer have been sanitized by now.
+        SL_LOGE("invalid stream type %d when converting to usage", streamType);
+        return usageForStreamType(ANDROID_DEFAULT_OUTPUT_STREAM_TYPE);
+    }
+}
 //-----------------------------------------------------------------------------
 // FIXME this method will be absorbed into android_audioPlayer_setPlayState() once
 //       bufferqueue and uri/fd playback are moved under the GenericPlayer C++ object
@@ -840,6 +883,7 @@ static void sfplayer_handlePrefetchEvent(int event, int data1, int data2, void* 
         if ((ap->mAudioTrack != 0) && (!ap->mSeek.mLoopEnabled)) {
             ap->mAudioTrack->stop();
         }
+        audioManagerPlayerEvent(ap, android::PLAYER_STATE_STOPPED);
         }
         break;
 
@@ -1279,6 +1323,7 @@ static void audioTrack_callBack_pullFromBuffQueue(int event, void* user, void *i
 
             // stop the track so it restarts playing faster when new data is enqueued
             ap->mAudioTrack->stop();
+            audioManagerPlayerEvent(ap, android::PLAYER_STATE_STOPPED);
         }
         interface_unlock_exclusive(&ap->mBufferQueue);
 
@@ -1346,6 +1391,7 @@ void android_audioPlayer_create(CAudioPlayer *pAudioPlayer) {
     pAudioPlayer->mAndroidObjState = ANDROID_UNINITIALIZED;
     pAudioPlayer->mSessionId = (audio_session_t) android::AudioSystem::newAudioUniqueId(
             AUDIO_UNIQUE_ID_USE_SESSION);
+    pAudioPlayer->mPIId = PLAYER_PIID_INVALID;
 
     // placeholder: not necessary yet as session ID lifetime doesn't extend beyond player
     // android::AudioSystem::acquireAudioSessionId(pAudioPlayer->mSessionId);
@@ -1661,6 +1707,15 @@ SLresult android_audioPlayer_realize(CAudioPlayer *pAudioPlayer, SLboolean async
             return result;
         }
 
+        if (pAudioPlayer->mObject.mEngine->mAudioManager == 0) {
+            SL_LOGE("AudioPlayer realize: no audio service, player will not be registered");
+            pAudioPlayer->mPIId = 0;
+        } else {
+            pAudioPlayer->mPIId = pAudioPlayer->mObject.mEngine->mAudioManager->trackPlayer(
+                    android::PLAYER_TYPE_SLES_AUDIOPLAYER_BUFFERQUEUE,
+                    usageForStreamType(pAudioPlayer->mStreamType), 0/*CONTENT_TYPE_UNKNOWN*/);
+        }
+
         // update performance mode according to actual flags granted to AudioTrack
         checkAndSetPerformanceModePost(pAudioPlayer);
 
@@ -1686,9 +1741,10 @@ SLresult android_audioPlayer_realize(CAudioPlayer *pAudioPlayer, SLboolean async
                                   midRoutingProxy_connect,
                                   pAudioPlayer->mAudioTrack.get());
             if (j_env->ExceptionCheck()) {
-                SL_LOGE("Java exception releasing recorder routing object.");
+                SL_LOGE("Java exception releasing player routing object.");
                 result = SL_RESULT_INTERNAL_ERROR;
                 pAudioPlayer->mAudioTrack.clear();
+                audioManagerReleasePlayer(pAudioPlayer);
                 return result;
             }
         }
@@ -1753,6 +1809,14 @@ SLresult android_audioPlayer_realize(CAudioPlayer *pAudioPlayer, SLboolean async
                 break;
         }
 
+        if (pAudioPlayer->mObject.mEngine->mAudioManager == 0) {
+            SL_LOGE("AudioPlayer realize: no audio service, player will not be registered");
+            pAudioPlayer->mPIId = 0;
+        } else {
+            pAudioPlayer->mPIId = pAudioPlayer->mObject.mEngine->mAudioManager->trackPlayer(
+                    android::PLAYER_TYPE_SLES_AUDIOPLAYER_URI_FD,
+                    usageForStreamType(pAudioPlayer->mStreamType), 0/*CONTENT_TYPE_UNKNOWN*/);
+        }
         }
         break;
 
@@ -1915,9 +1979,12 @@ SLresult android_audioPlayer_destroy(CAudioPlayer *pAudioPlayer) {
             // Note that there may still be another reference in post-unlock phase of SetPlayState
             pAudioPlayer->mAudioTrack.clear();
         }
+        audioManagerReleasePlayer(pAudioPlayer);
         break;
 
-    case AUDIOPLAYER_FROM_URIFD:     // intended fall-through
+    case AUDIOPLAYER_FROM_URIFD:
+        audioManagerReleasePlayer(pAudioPlayer);
+        // intended fall-through
     case AUDIOPLAYER_FROM_TS_ANDROIDBUFFERQUEUE:    // intended fall-through
     case AUDIOPLAYER_FROM_URIFD_TO_PCM_BUFFERQUEUE: // intended fall-through
     case AUDIOPLAYER_FROM_ADTS_ABQ_TO_PCM_BUFFERQUEUE:
@@ -2173,17 +2240,27 @@ void android_audioPlayer_setPlayState(CAudioPlayer *ap) {
             if (ap->mAudioTrack != 0) {
                 ap->mAudioTrack->stop();
             }
+            audioManagerPlayerEvent(ap, android::PLAYER_STATE_STOPPED);
             break;
         case SL_PLAYSTATE_PAUSED:
             SL_LOGV("setting AudioPlayer to SL_PLAYSTATE_PAUSED");
             if (ap->mAudioTrack != 0) {
                 ap->mAudioTrack->pause();
             }
+            if (ap->mObject.mEngine->mAudioManager != 0) {
+                ap->mObject.mEngine->mAudioManager->playerEvent(ap->mPIId,
+                        android::PLAYER_STATE_PAUSED);
+            }
             break;
         case SL_PLAYSTATE_PLAYING:
             SL_LOGV("setting AudioPlayer to SL_PLAYSTATE_PLAYING");
+            audioManagerPlayerEvent(ap, android::PLAYER_STATE_STARTED);
             if (ap->mAudioTrack != 0) {
                 // instead of ap->mAudioTrack->start();
+                if (!ap->mDeferredStart) {
+                    // state change
+                    audioManagerPlayerEvent(ap, android::PLAYER_STATE_STARTED);
+                }
                 ap->mDeferredStart = true;
             }
             break;
@@ -2193,7 +2270,23 @@ void android_audioPlayer_setPlayState(CAudioPlayer *ap) {
         }
         break;
 
-    case AUDIOPLAYER_FROM_URIFD:      // intended fall-through
+    case AUDIOPLAYER_FROM_URIFD:
+        switch (playState) {
+        case SL_PLAYSTATE_STOPPED:
+            aplayer_setPlayState(ap->mAPlayer, playState, &ap->mAndroidObjState);
+            audioManagerPlayerEvent(ap, android::PLAYER_STATE_STOPPED);
+            break;
+        case SL_PLAYSTATE_PAUSED:
+            aplayer_setPlayState(ap->mAPlayer, playState, &ap->mAndroidObjState);
+            audioManagerPlayerEvent(ap, android::PLAYER_STATE_PAUSED);
+            break;
+        case SL_PLAYSTATE_PLAYING:
+            audioManagerPlayerEvent(ap, android::PLAYER_STATE_STARTED);
+            aplayer_setPlayState(ap->mAPlayer, playState, &ap->mAndroidObjState);
+            break;
+        }
+        break;
+
     case AUDIOPLAYER_FROM_TS_ANDROIDBUFFERQUEUE:     // intended fall-through
     case AUDIOPLAYER_FROM_URIFD_TO_PCM_BUFFERQUEUE:  // intended fall-through
     case AUDIOPLAYER_FROM_ADTS_ABQ_TO_PCM_BUFFERQUEUE:
@@ -2391,6 +2484,7 @@ void android_audioPlayer_bufferQueue_onRefilled_l(CAudioPlayer *ap) {
     // queue was stopped when the queue become empty, we restart as soon as a new buffer
     // has been enqueued since we're in playing state
     if (ap->mAudioTrack != 0) {
+        audioManagerPlayerEvent(ap, android::PLAYER_STATE_STARTED);
         // instead of ap->mAudioTrack->start();
         ap->mDeferredStart = true;
     }
