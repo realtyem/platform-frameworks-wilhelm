@@ -233,7 +233,8 @@ static SLresult IEngine_CreateAudioPlayer(SLEngineItf self, SLObjectItf *pPlayer
                     // placement new (explicit constructor)
                     // FIXME unnecessary once those fields are encapsulated in one class, rather
                     //   than a structure
-                    (void) new (&thiz->mAudioTrack) android::sp<android::AudioTrack>();
+                    //###(void) new (&thiz->mAudioTrack) android::sp<android::AudioTrack>();
+                    (void) new (&thiz->mTrackPlayer) android::sp<android::TrackPlayerBase>();
                     (void) new (&thiz->mCallbackProtector)
                             android::sp<android::CallbackProtector>();
                     (void) new (&thiz->mAuxEffect) android::sp<android::AudioEffect>();

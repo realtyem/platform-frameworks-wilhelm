@@ -227,7 +227,7 @@ void object_unlock_exclusive_attributes(IObject *thiz, unsigned attributes)
         ap->mPrefetchStatus.mDeferredPrefetchContext  = NULL;
         ap->mPrefetchStatus.mDeferredPrefetchEvents   = SL_PREFETCHEVENT_NONE;
         if (ap->mDeferredStart) {
-            audioTrack = ap->mAudioTrack;
+            audioTrack = ap->mTrackPlayer->mAudioTrack;
             ap->mDeferredStart = false;
         }
     }

@@ -19,6 +19,7 @@
 #include "android/CallbackProtector.h"
 #include "android/android_Effect.h"
 #include "android/android_GenericPlayer.h"
+#include "android/android_TrackPlayerBase.h"
 #include <audiomanager/IAudioManager.h>
 #endif
 
@@ -101,8 +102,9 @@
     /** player interface ID, uniquely identifies the player in the system */
     audio_unique_id_t mPIId;
     // FIXME consolidate the next several variables into one class to avoid placement new
-    /** plays the PCM data for this player */
-    android::sp<android::AudioTrack> mAudioTrack;
+    /** plays the PCM data for this player and reflects its state in AudioManager,
+     *  always non-null once the AudioPlayer is created (i.e. before realize step) */
+    android::sp<android::TrackPlayerBase> mTrackPlayer;
     android::sp<android::CallbackProtector> mCallbackProtector;
     android::sp<android::GenericPlayer> mAPlayer;
     /** aux effect the AudioTrack will be attached to if aux send enabled */

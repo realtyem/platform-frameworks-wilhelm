@@ -145,7 +145,7 @@ static SLresult AllocPlayerRoutingProxy(IAndroidConfiguration* iConfig, jobject*
     SLresult result;
 
     IObject* configObj = iConfig->mThis;                // get corresponding object
-    android::AudioTrack* pAudioTrack = ((CAudioPlayer*)configObj)->mAudioTrack.get();
+    android::AudioTrack* pAudioTrack = ((CAudioPlayer*)configObj)->mTrackPlayer->mAudioTrack.get();
 
     JNIEnv* j_env = android::AndroidRuntime::getJNIEnv();
 

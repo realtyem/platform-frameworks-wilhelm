@@ -490,10 +490,10 @@ void android_ns_init(audio_session_t sessionId, IAndroidNoiseSuppression* ins) {
  *    ap != NULL
  *    for media players:
  *      ap->mAPlayer != 0
- *      ap->mAudioTrack == 0
+ *      ap->mTrackPlayer->mAudioTrack == 0
  *    for buffer queue players:
  *      ap->mAPlayer == 0
- *      ap->mAudioTrack != 0 is optional; if no track yet then the setting is deferred
+ *      ap->mTrackPlayer->mAudioTrack != 0 is optional; if no track yet then the setting is deferred
  */
 android::status_t android_fxSend_attach(CAudioPlayer* ap, bool attach,
         const android::sp<android::AudioEffect>& pFx, SLmillibel sendLevel) {
@@ -508,7 +508,7 @@ android::status_t android_fxSend_attach(CAudioPlayer* ap, bool attach,
     //  mAPlayer == 0 && mAudioTrack == 0 means player not fully configured yet
     // The asserts document and verify this.
     if (ap->mAPlayer != 0) {
-        assert(ap->mAudioTrack == 0);
+        assert(ap->mTrackPlayer->mAudioTrack == 0);
         if (attach) {
             ap->mAPlayer->attachAuxEffect(pFx->id());
             ap->mAPlayer->setAuxEffectSendLevel( sles_to_android_amplification(sendLevel) );
@@ -518,7 +518,7 @@ android::status_t android_fxSend_attach(CAudioPlayer* ap, bool attach,
         return android::NO_ERROR;
     }
 
-    if (ap->mAudioTrack == 0) {
+    if (ap->mTrackPlayer->mAudioTrack == 0) {
         // the player doesn't have an AudioTrack at the moment, so store this info to use it
         // when the AudioTrack becomes available
         if (attach) {
@@ -532,15 +532,16 @@ android::status_t android_fxSend_attach(CAudioPlayer* ap, bool attach,
     }
 
     if (attach) {
-        android::status_t status = ap->mAudioTrack->attachAuxEffect(pFx->id());
+        android::status_t status = ap->mTrackPlayer->mAudioTrack->attachAuxEffect(pFx->id());
         //SL_LOGV("attachAuxEffect(%d) returned %d", pFx->id(), status);
         if (android::NO_ERROR == status) {
             status =
-                ap->mAudioTrack->setAuxEffectSendLevel( sles_to_android_amplification(sendLevel) );
+                ap->mTrackPlayer->mAudioTrack->setAuxEffectSendLevel(
+                        sles_to_android_amplification(sendLevel) );
         }
         return status;
     } else {
-        return ap->mAudioTrack->attachAuxEffect(0);
+        return ap->mTrackPlayer->mAudioTrack->attachAuxEffect(0);
     }
 }
 
@@ -579,26 +580,27 @@ SLresult android_fxSend_attachToAux(CAudioPlayer* ap, SLInterfaceID pUuid, SLboo
  *    ap != NULL
  *    for media players:
  *      ap->mAPlayer != 0
- *      ap->mAudioTrack == 0
+ *      ap->mTrackPlayer->mAudioTrack == 0
  *    for buffer queue players:
  *      ap->mAPlayer == 0
- *      ap->mAudioTrack != 0 is optional; if no track yet then the setting is deferred
+ *      ap->mTrackPlayer->mAudioTrack != 0 is optional; if no track yet then the setting is deferred
  */
 android::status_t android_fxSend_setSendLevel(CAudioPlayer* ap, SLmillibel sendLevel) {
     // we keep track of the send level, independently of the current audio player level
     ap->mAuxSendLevel = sendLevel - ap->mVolume.mLevel;
 
     if (ap->mAPlayer != 0) {
-        assert(ap->mAudioTrack == 0);
+        assert(ap->mTrackPlayer->mAudioTrack == 0);
         ap->mAPlayer->setAuxEffectSendLevel( sles_to_android_amplification(sendLevel) );
         return android::NO_ERROR;
     }
 
-    if (ap->mAudioTrack == 0) {
+    if (ap->mTrackPlayer->mAudioTrack == 0) {
         return android::NO_ERROR;
     }
 
-    return ap->mAudioTrack->setAuxEffectSendLevel( sles_to_android_amplification(sendLevel) );
+    return ap->mTrackPlayer->mAudioTrack->setAuxEffectSendLevel(
+            sles_to_android_amplification(sendLevel) );
 }
 
 //-----------------------------------------------------------------------------
