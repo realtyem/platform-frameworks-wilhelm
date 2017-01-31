@@ -1626,7 +1626,6 @@ SLresult android_audioPlayer_realize(CAudioPlayer *pAudioPlayer, SLboolean async
 
     SLresult result = SL_RESULT_SUCCESS;
     SL_LOGV("Realize pAudioPlayer=%p", pAudioPlayer);
-
     AudioPlayback_Parameters app;
     app.sessionId = pAudioPlayer->mSessionId;
     app.streamType = pAudioPlayer->mStreamType;
@@ -1970,7 +1969,10 @@ SLresult android_audioPlayer_destroy(CAudioPlayer *pAudioPlayer) {
     case AUDIOPLAYER_FROM_PCM_BUFFERQUEUE: // intended fall-throughk, both types of players
                                            //   use the TrackPlayerBase for playback
     case AUDIOPLAYER_FROM_URIFD:
-        pAudioPlayer->mTrackPlayer->destroy();
+        if (pAudioPlayer->mTrackPlayer != 0) {
+            pAudioPlayer->mTrackPlayer->destroy();
+        }
+
         // intended fall-through
     case AUDIOPLAYER_FROM_TS_ANDROIDBUFFERQUEUE:    // intended fall-through
     case AUDIOPLAYER_FROM_URIFD_TO_PCM_BUFFERQUEUE: // intended fall-through
