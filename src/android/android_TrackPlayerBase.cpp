@@ -25,11 +25,16 @@
 #include <binder/IServiceManager.h>
 #include "utils/RefBase.h"
 
+#define max(a, b) ((a) > (b) ? (a) : (b))
+#define min(a, b) ((a) < (b) ? (a) : (b))
+
 namespace android {
 
 //--------------------------------------------------------------------------------------------------
 TrackPlayerBase::TrackPlayerBase() : BnPlayer(),
-        mPIId(PLAYER_PIID_INVALID)
+        mPIId(PLAYER_PIID_INVALID), mSlPlayerVolumeL(1.0f), mSlPlayerVolumeR(1.0f),
+        mPanMultiplierL(1.0f), mPanMultiplierR(1.0f),
+        mVolumeMultiplierL(1.0f), mVolumeMultiplierR(1.0f)
 {
     SL_LOGD("TrackPlayerBase::TrackPlayerBase()");
     // use checkService() to avoid blocking if audio service is not up yet
@@ -65,6 +70,20 @@ void TrackPlayerBase::destroy() {
     serviceReleasePlayer();
     if (mAudioManager != 0) {
         mAudioManager.clear();
+    }
+}
+
+void TrackPlayerBase::setSlPlayerVolume(float vl, float vr) {
+    float tl, tr = 1.0f;
+    {
+        Mutex::Autolock _l(mSettingsLock);
+        mSlPlayerVolumeL = vl;
+        mSlPlayerVolumeR = vr;
+        tl = mSlPlayerVolumeL * mPanMultiplierL * mVolumeMultiplierL;
+        tr = mSlPlayerVolumeR * mPanMultiplierR * mVolumeMultiplierR;
+    }
+    if (mAudioTrack != 0) {
+        mAudioTrack->setVolume(tl, tr);
     }
 }
 
@@ -124,13 +143,48 @@ void TrackPlayerBase::stop() {
 }
 
 void TrackPlayerBase::setVolume(float vol) {
-    //FIXME combine SL player volume with IPlayer volume and pan
+    float tl, tr = 1.0f;
+    {
+        Mutex::Autolock _l(mSettingsLock);
+        mVolumeMultiplierL = vol;
+        mVolumeMultiplierR = vol;
+        tl = mSlPlayerVolumeL * mPanMultiplierL * mVolumeMultiplierL;
+        tr = mSlPlayerVolumeR * mPanMultiplierR * mVolumeMultiplierR;
+    }
     if (mAudioTrack != 0) {
         SL_LOGD("TrackPlayerBase::setVolume() from IPlayer");
-        mAudioTrack->setVolume(vol);
+        mAudioTrack->setVolume(tl, tr);
     } else {
         SL_LOGD("TrackPlayerBase::setVolume() no AudioTrack for volume control from IPlayer");
     }
+}
+
+void TrackPlayerBase::setPan(float pan) {
+    float tl, tr = 1.0f;
+    {
+        Mutex::Autolock _l(mSettingsLock);
+        pan = min(max(-1.0f, pan), 1.0f);
+        if (pan >= 0.0f) {
+            mPanMultiplierL = 1.0f - pan;
+            mPanMultiplierR = 1.0f;
+        } else {
+            mPanMultiplierL = 1.0f;
+            mPanMultiplierR = 1.0f + pan;
+        }
+        tl = mSlPlayerVolumeL * mPanMultiplierL * mVolumeMultiplierL;
+        tr = mSlPlayerVolumeR * mPanMultiplierR * mVolumeMultiplierR;
+    }
+    if (mAudioTrack != 0) {
+        SL_LOGD("TrackPlayerBase::setPan() from IPlayer");
+        mAudioTrack->setVolume(tl, tr);
+    } else {
+        SL_LOGD("TrackPlayerBase::setPan() no AudioTrack for volume control from IPlayer");
+    }
+}
+
+void TrackPlayerBase::setStartDelayMs(int32_t delayMs) {
+    //FIXME not supported for SLES
+    SL_LOGW("setStartDelay() is not supported in OpenSL ES");
 }
 
 status_t TrackPlayerBase::onTransact(

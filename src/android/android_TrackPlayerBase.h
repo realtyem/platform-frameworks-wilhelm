@@ -42,6 +42,8 @@ public:
     virtual void pause();
     virtual void stop();
     virtual void setVolume(float vol);
+    virtual void setPan(float pan);
+    virtual void setStartDelayMs(int32_t delayMs);
 
     virtual status_t onTransact(
                 uint32_t code, const Parcel& data, Parcel* reply, uint32_t flags);
@@ -51,6 +53,8 @@ public:
 
     //FIXME temporary method while some AudioTrack state is outside of this class
     void reportEvent(player_state_t event);
+
+    void setSlPlayerVolume(float vl, float vr);
 
 protected:
     // native interface to AudioService
@@ -63,8 +67,13 @@ protected:
     // player interface ID, uniquely identifies the player in the system
     audio_unique_id_t mPIId;
 
-    // FIXME use mutex for volume and pan once combined with SL volume
-    //Mutex mSettingsLock;
+    // mutex for IPlayer volume and pan, and SL volume
+    Mutex mSettingsLock;
+    // volume coming from the SL ES volume API
+    float mSlPlayerVolumeL, mSlPlayerVolumeR;
+    // volume multipliers coming from the IPlayer volume and pan controls
+    float mPanMultiplierL, mPanMultiplierR;
+    float mVolumeMultiplierL, mVolumeMultiplierR;
 
     DISALLOW_EVIL_CONSTRUCTORS(TrackPlayerBase);
 };
