@@ -44,6 +44,9 @@ public:
     virtual void setVolume(float vol);
     virtual void setPan(float pan);
     virtual void setStartDelayMs(int32_t delayMs);
+    virtual void applyVolumeShaper(
+            const sp<VolumeShaper::Configuration>& configuration,
+            const sp<VolumeShaper::Operation>& operation) override;
 
     virtual status_t onTransact(
                 uint32_t code, const Parcel& data, Parcel* reply, uint32_t flags);

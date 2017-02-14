@@ -187,6 +187,21 @@ void TrackPlayerBase::setStartDelayMs(int32_t delayMs) {
     SL_LOGW("setStartDelay() is not supported in OpenSL ES");
 }
 
+void TrackPlayerBase::applyVolumeShaper(
+        const sp<VolumeShaper::Configuration>& configuration,
+        const sp<VolumeShaper::Operation>& operation) {
+    if (mAudioTrack != 0) {
+        SL_LOGD("TrackPlayerBase::applyVolumeShaper() from IPlayer");
+        VolumeShaper::Status status = mAudioTrack->applyVolumeShaper(configuration, operation);
+        if (status < 0) { // a non-negative value is the volume shaper id.
+            SL_LOGE("TrackPlayerBase::applyVolumeShaper() failed with status %d", status);
+        }
+    } else {
+        SL_LOGD("TrackPlayerBase::applyVolumeShaper()"
+                " no AudioTrack for volume control from IPlayer");
+    }
+}
+
 status_t TrackPlayerBase::onTransact(
     uint32_t code, const Parcel& data, Parcel* reply, uint32_t flags)
 {
