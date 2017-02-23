@@ -70,6 +70,10 @@ protected:
     // player interface ID, uniquely identifies the player in the system
     audio_unique_id_t mPIId;
 
+    // Mutex for state reporting
+    Mutex mPlayerStateLock;
+    player_state_t mLastReportedEvent;
+
     // mutex for IPlayer volume and pan, and SL volume
     Mutex mSettingsLock;
     // volume coming from the SL ES volume API

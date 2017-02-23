@@ -32,7 +32,8 @@ namespace android {
 
 //--------------------------------------------------------------------------------------------------
 TrackPlayerBase::TrackPlayerBase() : BnPlayer(),
-        mPIId(PLAYER_PIID_INVALID), mSlPlayerVolumeL(1.0f), mSlPlayerVolumeR(1.0f),
+        mPIId(PLAYER_PIID_INVALID), mLastReportedEvent(PLAYER_STATE_UNKNOWN),
+        mSlPlayerVolumeL(1.0f), mSlPlayerVolumeR(1.0f),
         mPanMultiplierL(1.0f), mPanMultiplierR(1.0f),
         mVolumeMultiplierL(1.0f), mVolumeMultiplierR(1.0f)
 {
@@ -90,7 +91,12 @@ void TrackPlayerBase::setSlPlayerVolume(float vl, float vr) {
 //------------------------------------------------------------------------------
 void TrackPlayerBase::servicePlayerEvent(player_state_t event) {
     if (mAudioManager != 0) {
-        mAudioManager->playerEvent(mPIId, event);
+        // only report state change
+        Mutex::Autolock _l(mPlayerStateLock);
+        if (event != mLastReportedEvent) {
+            mLastReportedEvent = event;
+            mAudioManager->playerEvent(mPIId, event);
+        }
     }
 }
 
