@@ -55,12 +55,6 @@ inline void audioManagerPlayerEvent(CAudioPlayer* ap, android::player_state_t ev
     }
 }
 
-inline void audioManagerReleasePlayer(CAudioPlayer* ap) {
-    if (ap->mObject.mEngine->mAudioManager != 0) {
-        ap->mObject.mEngine->mAudioManager->releasePlayer(ap->mPIId);
-    }
-}
-
 //-----------------------------------------------------------------------------
 // get an audio attributes usage for a stream type, but only consider stream types
 // that can successfully be set through SLAndroidConfigurationItf. It is invalid to call
@@ -1738,7 +1732,6 @@ SLresult android_audioPlayer_realize(CAudioPlayer *pAudioPlayer, SLboolean async
                 SL_LOGE("Java exception releasing player routing object.");
                 result = SL_RESULT_INTERNAL_ERROR;
                 pAudioPlayer->mTrackPlayer->mAudioTrack.clear();
-                audioManagerReleasePlayer(pAudioPlayer);
                 return result;
             }
         }

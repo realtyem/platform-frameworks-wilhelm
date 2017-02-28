@@ -140,7 +140,6 @@ void CEngine_Destroy(void *self)
 #if defined(ANDROID)
     if (thiz->mAudioManager != 0) {
         thiz->mAudioManager.clear();
-        thiz->mAudioManager.~sp();
     }
 
     // free equalizer preset names
