@@ -93,7 +93,8 @@ void TrackPlayerBase::servicePlayerEvent(player_state_t event) {
     if (mAudioManager != 0) {
         // only report state change
         Mutex::Autolock _l(mPlayerStateLock);
-        if (event != mLastReportedEvent) {
+        if (event != mLastReportedEvent
+                && mPIId != PLAYER_PIID_INVALID) {
             mLastReportedEvent = event;
             mAudioManager->playerEvent(mPIId, event);
         }
@@ -101,7 +102,8 @@ void TrackPlayerBase::servicePlayerEvent(player_state_t event) {
 }
 
 void TrackPlayerBase::serviceReleasePlayer() {
-    if (mAudioManager != 0) {
+    if (mAudioManager != 0
+            && mPIId != PLAYER_PIID_INVALID) {
         mAudioManager->releasePlayer(mPIId);
     }
 }
