@@ -19,7 +19,7 @@
 #include "android/CallbackProtector.h"
 #include "android/android_Effect.h"
 #include "android/android_GenericPlayer.h"
-#include "android/android_TrackPlayerBase.h"
+#include <media/TrackPlayerBase.h>
 #include <audiomanager/IAudioManager.h>
 #endif
 

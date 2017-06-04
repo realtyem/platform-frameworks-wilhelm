@@ -281,7 +281,7 @@ void android_audioPlayer_volumeUpdate(CAudioPlayer* ap)
     if (ap->mAPlayer != 0) {
         ap->mAPlayer->setVolume(leftVol, rightVol);
     } else if (ap->mTrackPlayer != 0) {
-        ap->mTrackPlayer->setSlPlayerVolume(leftVol, rightVol);
+        ap->mTrackPlayer->setPlayerVolume(leftVol, rightVol);
     }
 
     // changes in the AudioPlayer volume must be reflected in the send level:

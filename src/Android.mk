@@ -92,7 +92,6 @@ LOCAL_SRC_FILES:=                     \
         android/android_GenericMediaPlayer.cpp\
         android/android_GenericPlayer.cpp     \
         android/android_LocAVPlayer.cpp       \
-        android/android_TrackPlayerBase.cpp   \
         android/android_StreamPlayer.cpp      \
         android/android_Effect.cpp            \
         android/util/AacAdtsExtractor.cpp     \
@@ -192,7 +191,9 @@ LOCAL_SHARED_LIBRARIES :=         \
         libdl                     \
         libandroid_runtime
 
-LOCAL_EXPORT_SHARED_LIBRARY_HEADERS := libmedia
+LOCAL_EXPORT_SHARED_LIBRARY_HEADERS := \
+        libmedia                       \
+        libaudioclient
 
 # For Brillo, we do not want this dependency as it significantly increases the
 # size of the checkout. Also, the library is dependent on Java (which is not
