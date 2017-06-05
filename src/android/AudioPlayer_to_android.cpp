@@ -1727,7 +1727,7 @@ SLresult android_audioPlayer_realize(CAudioPlayer *pAudioPlayer, SLboolean async
             j_env->ExceptionClear();
             j_env->CallVoidMethod(pAudioPlayer->mAndroidConfiguration.mRoutingProxy,
                                   midRoutingProxy_connect,
-                                  pAudioPlayer->mTrackPlayer->mAudioTrack.get());
+                                  (jlong)pAudioPlayer->mTrackPlayer->mAudioTrack.get());
             if (j_env->ExceptionCheck()) {
                 SL_LOGE("Java exception releasing player routing object.");
                 result = SL_RESULT_INTERNAL_ERROR;
