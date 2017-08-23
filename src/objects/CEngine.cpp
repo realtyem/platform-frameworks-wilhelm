@@ -17,7 +17,12 @@
 /** \file CEngine.c Engine class */
 
 #include "sles_allinclusive.h"
-
+#ifdef ANDROID
+#include <binder/IServiceManager.h>
+#include <utils/StrongPointer.h>
+#include <audiomanager/AudioManager.h>
+#include <audiomanager/IAudioManager.h>
+#endif
 
 /* This implementation supports at most one engine, identical for both OpenSL ES and OpenMAX AL */
 
@@ -67,6 +72,16 @@ SLresult CEngine_Realize(void *self, SLboolean async)
         (void) pthread_join(thiz->mSyncThread, (void **) NULL);
         return result;
     }
+#ifdef ANDROID
+    // use checkService() to avoid blocking if audio service is not up yet
+    android::sp<android::IBinder> binder =
+            android::defaultServiceManager()->checkService(android::String16("audio"));
+    if (binder == 0) {
+        SL_LOGE("CEngine_Realize: binding to audio service failed, service up?");
+    } else {
+        thiz->mAudioManager = android::interface_cast<android::IAudioManager>(binder);
+    }
+#endif
 #ifdef USE_SDL
     SDL_open(&thiz->mEngine);
 #endif
@@ -123,6 +138,10 @@ void CEngine_Destroy(void *self)
     ThreadPool_deinit(&thiz->mThreadPool);
 
 #if defined(ANDROID)
+    if (thiz->mAudioManager != 0) {
+        thiz->mAudioManager.clear();
+    }
+
     // free equalizer preset names
     if (NULL != thiz->mEqPresetNames) {
         for (unsigned i = 0; i < thiz->mEqNumPresets; ++i) {

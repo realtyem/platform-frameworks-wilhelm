@@ -18,7 +18,7 @@
 
 #include "sles_allinclusive.h"
 #ifdef ANDROID
-#include <audio_effects/effect_equalizer.h>
+#include <system/audio_effects/effect_equalizer.h>
 #endif
 
 #define MAX_EQ_PRESETS 3

@@ -19,7 +19,6 @@
 #include "sles_allinclusive.h"
 
 #ifdef ANDROID
-#include <media/stagefright/DataSource.h>
 #include <binder/ProcessState.h>
 #endif
 
@@ -137,7 +136,6 @@ LI_API SLresult liCreateEngine(SLObjectItf *pEngine, SLuint32 numOptions,
 
 #ifdef ANDROID
         android::ProcessState::self()->startThreadPool();
-        android::DataSource::RegisterDefaultSniffers();
 #endif
 
         thiz = (CEngine *) construct(pCEngine_class, exposedMask, NULL);
